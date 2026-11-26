@@ -67,6 +67,9 @@ final class AppModel {
     @ObservationIgnored private var retryWork: DispatchWorkItem?
     @ObservationIgnored private var localThread: Int64 = -1
     @ObservationIgnored private(set) var callKit: CallCoordinator!
+    /// Debug screenshots only: which tab and conversation to open on launch.
+    var screenshotTab: Int?
+    var screenshotThread: ThreadRoute?
 
     init() {
         notificationsEnabled = defaults.bool(forKey: "notify")
@@ -590,3 +593,35 @@ extension AppModel: BleCentralDelegate, ClientLinkDelegate {
         }
     }
 }
+
+#if DEBUG
+// MARK: - Screenshots (debug builds only)
+
+/// Opens one screen with demo data, for the automated screenshot workflow
+/// (`xcrun simctl launch … -polScreenshot <screen>`). Compiled out of release builds.
+extension AppModel {
+    static var screenshotArgument: String? {
+        let args = CommandLine.arguments
+        guard let i = args.firstIndex(of: "-polScreenshot"), i + 1 < args.count else { return nil }
+        return args[i + 1]
+    }
+
+    func prepareScreenshot(_ screen: String) {
+        if screen == "pair" {
+            demoGateway = nil; demo = false; defaults.set(false, forKey: "demo")
+            pairing = .compare(sas: "974705", gatewayName: "Pixel 8", fingerprint: "6BCD-A99D-58E5", waitingForGateway: false)
+            return
+        }
+        enterDemo()
+        switch screen {
+        case "contacts": screenshotTab = 1
+        case "keypad": screenshotTab = 2
+        case "messages": screenshotTab = 3
+        case "thread": screenshotTab = 3; screenshotThread = ThreadRoute(thread: 1, address: "+15555550101")
+        case "gateway": screenshotTab = 4
+        case "incall": screenshotTab = 0; DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in MainActor.assumeIsolated { self?.simulateIncomingCall() } }
+        default: screenshotTab = 0
+        }
+    }
+}
+#endif

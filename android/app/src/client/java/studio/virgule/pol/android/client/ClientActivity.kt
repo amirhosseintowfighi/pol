@@ -52,7 +52,9 @@ class ClientActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContent { PolTheme { ClientRoot() } }
+        // Debug builds only: open one screen with demo data for the automated screenshot workflow.
+        val screenshot = if (studio.virgule.pol.android.BuildConfig.DEBUG) intent?.getStringExtra("polScreenshot") else null
+        setContent { PolTheme { ClientRoot(screenshot) } }
     }
 
     override fun onStart() { super.onStart(); AppVisibility.foreground = true }
@@ -65,7 +67,7 @@ sealed interface Detail {
 }
 
 @Composable
-private fun ClientRoot() {
+private fun ClientRoot(screenshot: String? = null) {
     val ctx = LocalContext.current
     val repo = remember { ClientRepository.get(ctx) }
     val snap by repo.state.collectAsState()
@@ -74,6 +76,18 @@ private fun ClientRoot() {
     var detail by remember { mutableStateOf<Detail?>(null) }
     val snackbar = remember { SnackbarHostState() }
 
+    LaunchedEffect(screenshot) {
+        when (screenshot) {
+            null -> {}
+            "pair" -> repo.debugPairingPreview()
+            else -> {
+                repo.enterDemo(); onboarding = false
+                tab = when (screenshot) { "contacts" -> 1; "messages", "thread" -> 2; "gateway" -> 3; else -> 0 }
+                if (screenshot == "thread") detail = Detail.Thread(1, "+15555550101")
+                if (screenshot == "incall") { kotlinx.coroutines.delay(600); repo.simulateIncomingCall() }
+            }
+        }
+    }
     LaunchedEffect(snap.link, repo.gateway) {
         if (repo.gateway != null && !snap.demo && repo.hasBluetoothPermissions()) ClientService.start(ctx)
     }

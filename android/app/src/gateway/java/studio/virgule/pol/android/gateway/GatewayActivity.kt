@@ -75,6 +75,10 @@ class GatewayActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // Debug builds only: show the pairing prompt with sample values for the screenshot workflow.
+        if (studio.virgule.pol.android.BuildConfig.DEBUG && intent?.getStringExtra("polScreenshot") == "pair") {
+            GatewayState.mutable.value = GatewayState.ui.value.copy(pairingRequest = PairingRequest("974705", "iPhone", "2F1C-77A0-9E41"))
+        }
         setContent { PolTheme { GatewayScreen() } }
     }
 

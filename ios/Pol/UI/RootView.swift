@@ -23,6 +23,12 @@ struct RootView: View {
             }
         }
         .onChange(of: model.lastError) { _, e in showError = e != nil }
+        .onChange(of: model.screenshotTab) { _, t in if let t { tab = t } }
+        .onAppear {
+            #if DEBUG
+            if let s = AppModel.screenshotArgument { model.prepareScreenshot(s) }
+            #endif
+        }
         .alert(describeError(model.lastError ?? ""), isPresented: $showError) {
             Button(L("ok")) { model.lastError = nil }
         }

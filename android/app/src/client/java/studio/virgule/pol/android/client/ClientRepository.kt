@@ -303,6 +303,9 @@ class ClientRepository private constructor(private val ctx: Context) {
         conn.connect()
     }
 
+    /** Debug screenshots only: show the code-comparison step without a gateway. */
+    fun debugPairingPreview() { _pairing.value = PairingUi.Compare("974705", "Pixel 8", "6BCD-A99D-58E5", waitingForGateway = false) }
+
     fun confirmSas() = handler.post {
         link?.confirmSas()
         (_pairing.value as? PairingUi.Compare)?.let { if (_pairing.value !is PairingUi.Done) _pairing.value = it.copy(waitingForGateway = true) }

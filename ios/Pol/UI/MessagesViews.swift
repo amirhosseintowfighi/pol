@@ -8,6 +8,7 @@ struct MessagesView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
+            let _ = openScreenshotThread()
             VStack(spacing: 0) {
                 LinkBanner()
                 List(model.searchConversations(query)) { c in
@@ -43,6 +44,14 @@ struct MessagesView: View {
 }
 
 struct ThreadRoute: Hashable { let thread: Int64; let address: String }
+
+extension MessagesView {
+    /// Debug screenshots: open the requested conversation once.
+    fileprivate func openScreenshotThread() {
+        guard let r = model.screenshotThread else { return }
+        DispatchQueue.main.async { MainActor.assumeIsolated { path = [r]; model.screenshotThread = nil } }
+    }
+}
 
 private struct ConversationRow: View {
     @Environment(AppModel.self) private var model
