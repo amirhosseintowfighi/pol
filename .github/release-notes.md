@@ -13,7 +13,7 @@
 | `SHA256SUMS.txt` | Checksums |
 
 ### Install and setup
-[English guide](https://github.com/amirhosseintowfighi/tel-bridge/blob/claude/phone-messaging-app-polish-38zx1p/docs/GUIDE.md) · [راهنمای فارسی](https://github.com/amirhosseintowfighi/tel-bridge/blob/claude/phone-messaging-app-polish-38zx1p/docs/fa/README.md)
+[English guide](https://github.com/amirhosseintowfighi/tel-bridge/blob/main/docs/GUIDE.md) · [راهنمای فارسی](https://github.com/amirhosseintowfighi/tel-bridge/blob/main/docs/fa/README.md)
 
 <div dir="rtl">
 
