@@ -25,9 +25,6 @@ targets:
       - package: COpus
     sources:
       - path: Pol
-    resources:
-      - path: ../protocol/vectors.json
-        buildPhase: none
     info:
       path: Pol/Resources/Info.plist
       properties:
@@ -49,8 +46,9 @@ targets:
   PolTests:
     type: bundle.unit-test
     platform: iOS
-    sources: [PolTests]
-    resources:
+    sources:
+      - path: PolTests
       - path: ../protocol/vectors.json
+        buildPhase: resources
     dependencies:
       - target: Pol

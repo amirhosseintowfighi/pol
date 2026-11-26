@@ -30,6 +30,10 @@ jobs:
         with: { gradle-version: "8.14.3" }
       - name: Build both flavors and run lint
         run: gradle -p android :app:assembleGatewayDebug :app:assembleClientDebug :app:lintGatewayDebug :app:lintClientDebug
+      - name: Lint findings
+        if: failure()
+        run: |
+          for f in android/app/build/intermediates/lint_intermediate_text_report/*/*/lint-results-*.txt; do echo "== $f"; grep -E "Error:|: Error" -A3 "$f" | head -120; done || true
       - name: Merged manifests have no network permission
         run: |
           ! grep -R "android.permission.INTERNET" android/app/build/intermediates/merged_manifests/ || (echo "INTERNET permission found" && exit 1)
