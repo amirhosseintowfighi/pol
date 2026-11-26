@@ -1,0 +1,1 @@
+Upstream: https://github.com/xiph/opus tag v1.5.2 (commit ddbe48383984d56acd9e1ab6a090c54ca6b735a6). Unmodified sources from celt_sources.mk, silk_sources.mk (+float), opus_sources.mk (+float); floating point, no assembly, no DNN.

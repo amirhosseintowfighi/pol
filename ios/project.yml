@@ -1,0 +1,56 @@
+# XcodeGen spec: `brew install xcodegen && xcodegen` in this folder creates Pol.xcodeproj.
+name: Pol
+options:
+  bundleIdPrefix: studio.virgule.pol
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: targeted
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""   # set your own team in Xcode; never commit it
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+packages:
+  COpus:
+    path: COpus
+targets:
+  Pol:
+    type: application
+    platform: iOS
+    dependencies:
+      - package: COpus
+    sources:
+      - path: Pol
+    resources:
+      - path: ../protocol/vectors.json
+        buildPhase: none
+    info:
+      path: Pol/Resources/Info.plist
+      properties:
+        CFBundleDisplayName: Pol
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, fa]
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [bluetooth-central, audio, voip]
+        NSMicrophoneUsageDescription: "When you take a call on this iPhone, your voice is sent over encrypted Bluetooth to your Android gateway phone, which carries the call. Nothing is recorded or sent to the internet."
+        NSBluetoothAlwaysUsageDescription: "Pol uses Bluetooth to connect to your own Android gateway phone, which holds your SIM cards. Nothing is sent to the internet."
+        ITSAppUsesNonExemptEncryption: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: studio.virgule.pol.ios
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+  PolTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [PolTests]
+    resources:
+      - path: ../protocol/vectors.json
+    dependencies:
+      - target: Pol

@@ -1,0 +1,20 @@
+Pol
+Copyright (C) 2026 Virgule — https://virgule.studio
+
+Pol is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation, version 3 (see LICENSE). It is distributed WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+Designed and developed by Virgule.
+
+Third-party components (all compatible with GPL-3.0):
+
+| Component | Version | Licence | Where |
+| --- | --- | --- | --- |
+| libopus (Xiph.Org Foundation and contributors) | 1.5.2, unmodified, in ios/COpus/Sources/COpus (licence: COPYING there) | BSD-3-Clause | iPhone app: Opus voice codec |
+| Concentus (Logan Stromberg, jaredmdobson) | 1.0.2 | BSD-3-Clause | Android apps: Opus voice codec |
+| Shizuku API and provider (RikkaApps) | 13.1.5 | Apache-2.0 | Android gateway: starting the call-audio helper |
+| kotlinx.serialization, Kotlin standard library, kotlinx.coroutines (JetBrains) | 1.8.1 / 2.1.21 / 1.10.2 | Apache-2.0 | Android apps and core |
+| AndroidX, Jetpack Compose, Material 3 (Google) | see android/app/build.gradle.kts | Apache-2.0 | Android apps |
+
+Shizuku itself is a separate app the user installs; it is not part of Pol.
