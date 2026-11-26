@@ -8,8 +8,16 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  # Or run it by hand (Actions › Release › Run workflow): the workflow creates the tag on the chosen branch's commit.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to create, e.g. v0.1.0"
+        required: true
 permissions:
   contents: write
+env:
+  VERSION: ${{ inputs.version || github.ref_name }}
 jobs:
   android:
     runs-on: ubuntu-24.04
@@ -31,7 +39,7 @@ jobs:
         run: gradle -p android :app:assembleGatewayRelease :app:assembleClientRelease
       - name: Collect
         run: |
-          v="${GITHUB_REF_NAME#v}"; mkdir out
+          v="${VERSION#v}"; mkdir out
           cp android/app/build/outputs/apk/gateway/release/*.apk "out/Pol-Gateway-$v.apk"
           cp android/app/build/outputs/apk/client/release/*.apk "out/Pol-$v.apk"
       - uses: actions/upload-artifact@v4
@@ -49,7 +57,7 @@ jobs:
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" > "$RUNNER_TEMP/xcode.log" 2>&1 \
             || { grep -E "error:" "$RUNNER_TEMP/xcode.log" | sort -u | head -80; exit 1; }
           mkdir -p "$RUNNER_TEMP/Payload" && cp -R "$RUNNER_TEMP/Pol.xcarchive/Products/Applications/Pol.app" "$RUNNER_TEMP/Payload/"
-          v="${GITHUB_REF_NAME#v}"; mkdir -p ../out && (cd "$RUNNER_TEMP" && zip -qr "$GITHUB_WORKSPACE/out/Pol-$v-unsigned.ipa" Payload)
+          v="${VERSION#v}"; mkdir -p ../out && (cd "$RUNNER_TEMP" && zip -qr "$GITHUB_WORKSPACE/out/Pol-$v-unsigned.ipa" Payload)
       - uses: actions/upload-artifact@v4
         with: { name: ios, path: out/ }
 
@@ -65,8 +73,10 @@ jobs:
         run: cd out && sha256sum * > SHA256SUMS.txt
       - uses: softprops/action-gh-release@v2
         with:
-          name: Pol ${{ github.ref_name }}
+          name: Pol ${{ env.VERSION }}
+          tag_name: ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
           body_path: .github/release-notes.md
           # 0.x versions are test releases until the apps have been tried on real phones.
-          prerelease: ${{ startsWith(github.ref_name, 'v0.') }}
+          prerelease: ${{ startsWith(env.VERSION, 'v0.') }}
           files: out/*
