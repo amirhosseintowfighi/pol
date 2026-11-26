@@ -65,7 +65,7 @@ final class VoiceCodec: @unchecked Sendable {
     /// 960 samples at 48 kHz in, one packet out.
     func encode(_ frame: [Int16]) -> Data? {
         if let enc {
-            let n = frame.withUnsafeBufferPointer { opus_encode(enc, $0.baseAddress, 960, &packet, Int32(packet.count)) }
+            let n = frame.withUnsafeBufferPointer { opus_encode(enc, $0.baseAddress!, 960, &packet, Int32(packet.count)) }
             return n > 0 ? Data(packet[0..<Int(n)]) : nil
         }
         // G.711: average 6:1 down to 8 kHz (the capture is already band-limited by voice processing).
@@ -82,8 +82,8 @@ final class VoiceCodec: @unchecked Sendable {
     func decode(_ payload: Data?) -> [Float] {
         if let dec {
             let n: Int32 = pcm.withUnsafeMutableBufferPointer { out in
-                guard let payload else { return opus_decode(dec, nil, 0, out.baseAddress, 960, 0) }
-                return payload.withUnsafeBytes { opus_decode(dec, $0.bindMemory(to: UInt8.self).baseAddress, Int32(payload.count), out.baseAddress, 960, 0) }
+                guard let payload else { return opus_decode(dec, nil, 0, out.baseAddress!, 960, 0) }
+                return payload.withUnsafeBytes { opus_decode(dec, $0.bindMemory(to: UInt8.self).baseAddress, Int32(payload.count), out.baseAddress!, 960, 0) }
             }
             return n > 0 ? pcm[0..<Int(n)].map { Float($0) / 32768 } : [Float](repeating: 0, count: 960)
         }
