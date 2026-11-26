@@ -46,7 +46,8 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen
           xcodebuild -scheme Pol -configuration Release -sdk iphoneos -destination "generic/platform=iOS" -archivePath "$RUNNER_TEMP/Pol.xcarchive" archive \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" > "$RUNNER_TEMP/xcode.log" 2>&1 \
+            || { grep -E "error:" "$RUNNER_TEMP/xcode.log" | sort -u | head -80; exit 1; }
           mkdir -p "$RUNNER_TEMP/Payload" && cp -R "$RUNNER_TEMP/Pol.xcarchive/Products/Applications/Pol.app" "$RUNNER_TEMP/Payload/"
           v="${GITHUB_REF_NAME#v}"; mkdir -p ../out && (cd "$RUNNER_TEMP" && zip -qr "$GITHUB_WORKSPACE/out/Pol-$v-unsigned.ipa" Payload)
       - uses: actions/upload-artifact@v4
@@ -56,11 +57,16 @@ jobs:
     needs: [android, ios]
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: .github }
       - uses: actions/download-artifact@v4
         with: { path: out, merge-multiple: true }
       - name: Checksums
         run: cd out && sha256sum * > SHA256SUMS.txt
       - uses: softprops/action-gh-release@v2
         with:
+          name: Pol ${{ github.ref_name }}
+          body_path: .github/release-notes.md
+          # 0.x versions are test releases until the apps have been tried on real phones.
+          prerelease: ${{ startsWith(github.ref_name, 'v0.') }}
           files: out/*
-          generate_release_notes: true
