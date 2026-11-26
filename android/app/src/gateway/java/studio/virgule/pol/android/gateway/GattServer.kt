@@ -76,7 +76,7 @@ class GattServer(
             queuedBytes -= next.size
             inFlight = true
             val ok = if (Build.VERSION.SDK_INT >= 33) {
-                s.notifyCharacteristicChanged(device, tx, false, next) == BluetoothGatt.GATT_SUCCESS
+                s.notifyCharacteristicChanged(device, tx, false, next) == android.bluetooth.BluetoothStatusCodes.SUCCESS
             } else {
                 @Suppress("DEPRECATION")
                 tx.value = next

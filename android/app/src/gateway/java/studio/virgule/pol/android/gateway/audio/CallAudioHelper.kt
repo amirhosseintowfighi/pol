@@ -93,7 +93,7 @@ class CallAudioHelper(private val context: Context?) : Binder() {
         fun run() {
             // Take the gateway's own microphone and earpiece out of the call where the phone supports it, so the
             // person in the room isn't heard and doesn't hear the call. Not fatal if refused.
-            runCatching { am.mode = MODE_CALL_REDIRECT; changedMode = am.mode == MODE_CALL_REDIRECT }
+            runCatching { am.mode = AudioManager.MODE_CALL_REDIRECT; changedMode = am.mode == AudioManager.MODE_CALL_REDIRECT }
             record.startRecording()
             track.play()
             val out = FileOutputStream(pfd.fileDescriptor)
@@ -119,7 +119,7 @@ class CallAudioHelper(private val context: Context?) : Binder() {
             running = false
             runCatching { record.stop() }; runCatching { record.release() }
             runCatching { track.stop() }; runCatching { track.release() }
-            if (changedMode) runCatching { if (am.mode == MODE_CALL_REDIRECT) am.mode = previousMode }
+            if (changedMode) runCatching { if (am.mode == AudioManager.MODE_CALL_REDIRECT) am.mode = previousMode }
             runCatching { pfd.close() }
         }
     }
@@ -131,6 +131,5 @@ class CallAudioHelper(private val context: Context?) : Binder() {
         const val CODE_STOP = 3
         /** Shizuku's "destroy user service" transaction. */
         const val CODE_DESTROY = 16777114
-        private const val MODE_CALL_REDIRECT = 5
     }
 }

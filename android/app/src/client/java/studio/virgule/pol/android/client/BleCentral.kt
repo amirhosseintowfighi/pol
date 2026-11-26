@@ -98,7 +98,7 @@ class BleCentral(private val ctx: Context, private val handler: Handler) {
             val ok = if (android.os.Build.VERSION.SDK_INT >= 33) {
                 // Without response: call audio needs ~50 writes/s. The link layer still acknowledges each packet, and
                 // onCharacteristicWrite still paces the queue, so nothing is dropped silently.
-                g.writeCharacteristic(c, next, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE) == BluetoothGatt.GATT_SUCCESS
+                g.writeCharacteristic(c, next, BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE) == android.bluetooth.BluetoothStatusCodes.SUCCESS
             } else {
                 @Suppress("DEPRECATION") run { c.writeType = BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE; c.value = next; g.writeCharacteristic(c) }
             }
@@ -139,7 +139,7 @@ class BleCentral(private val ctx: Context, private val handler: Handler) {
                     if (r == null || t == null || d == null) { close(); return@post }
                     g.setCharacteristicNotification(t, true)
                     val enable = byteArrayOf(1, 0)
-                    val ok = if (android.os.Build.VERSION.SDK_INT >= 33) g.writeDescriptor(d, enable) == BluetoothGatt.GATT_SUCCESS
+                    val ok = if (android.os.Build.VERSION.SDK_INT >= 33) g.writeDescriptor(d, enable) == android.bluetooth.BluetoothStatusCodes.SUCCESS
                     else @Suppress("DEPRECATION") run { d.value = enable; g.writeDescriptor(d) }
                     if (!ok) { close(); return@post }
                     rx = r

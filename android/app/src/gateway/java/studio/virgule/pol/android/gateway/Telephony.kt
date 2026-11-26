@@ -193,8 +193,8 @@ class Telephony(private val ctx: Context, private val handler: Handler) {
             }
         }
         val filter = IntentFilter().apply { addAction(ACTION_SENT); addAction(ACTION_DELIVERED) }
-        if (Build.VERSION.SDK_INT >= 33) ctx.registerReceiver(receiver, filter, null, handler, Context.RECEIVER_NOT_EXPORTED)
-        else ctx.registerReceiver(receiver, filter, null, handler)
+        // The flags overload exists since Android 8; before 13 the NOT_EXPORTED bit is simply ignored.
+        ctx.registerReceiver(receiver, filter, null, handler, Context.RECEIVER_NOT_EXPORTED)
         // Delivery reports are optional on many networks: stop listening after 10 minutes either way.
         handler.postDelayed({ runCatching { ctx.unregisterReceiver(receiver) } }, 10 * 60_000L)
 
