@@ -27,7 +27,13 @@ jobs:
           POL_KEYSTORE_PASSWORD: ${{ secrets.POL_KEYSTORE_PASSWORD }}
           POL_KEY_ALIAS: ${{ secrets.POL_KEY_ALIAS }}
           POL_KEY_PASSWORD: ${{ secrets.POL_KEY_PASSWORD }}
-        run: gradle -p android :app:assembleGatewayRelease :app:assembleClientRelease --stacktrace
+        run: |
+          set -o pipefail
+          gradle -p android :app:assembleGatewayRelease :app:assembleClientRelease --continue 2>&1 | tee "$RUNNER_TEMP/build.log"
+      - name: Show compile errors
+        if: failure()
+        run: |
+          grep -E "^(e|w): |error:|What went wrong" -A2 "$RUNNER_TEMP/build.log" | grep -v "deprecated" | head -150 || true
       - name: Collect
         run: |
           mkdir out
@@ -47,7 +53,8 @@ jobs:
           cd ios && xcodegen
           xcodebuild -scheme Pol -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/Pol.xcarchive" archive \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" | tail -n 200
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" > "$RUNNER_TEMP/xcode.log" 2>&1 \
+            || { grep -E "error:|warning: .*Swift" "$RUNNER_TEMP/xcode.log" | sort -u | head -120; exit 1; }
           test -d "$RUNNER_TEMP/Pol.xcarchive/Products/Applications/Pol.app"
           mkdir -p "$RUNNER_TEMP/ipa/Payload" "$GITHUB_WORKSPACE/out"
           cp -R "$RUNNER_TEMP/Pol.xcarchive/Products/Applications/Pol.app" "$RUNNER_TEMP/ipa/Payload/"

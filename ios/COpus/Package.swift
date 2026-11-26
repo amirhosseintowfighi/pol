@@ -4,7 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "COpus",
-    platforms: [.iOS(.v18)],
+    platforms: [.iOS("18.0")],
     products: [.library(name: "COpus", targets: ["COpus"])],
     targets: [
         .target(
