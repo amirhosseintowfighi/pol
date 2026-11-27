@@ -34,20 +34,95 @@ enum Fmt {
     }
 }
 
-/// Monogram avatar with a calm tint chosen from the name.
+/// Contact picture in the system style: initials on a soft gray-blue gradient, or a silhouette for unknown numbers.
 struct Avatar: View {
     let name: String
     var size: CGFloat = 40
-    private static let tints: [Color] = [.blue, .teal, .indigo, .orange, .pink, .green, .purple]
+    private static let gradient = LinearGradient(
+        colors: [Color(red: 0.66, green: 0.70, blue: 0.81), Color(red: 0.49, green: 0.53, blue: 0.66)],
+        startPoint: .top, endPoint: .bottom)
 
     var body: some View {
-        let tint = Self.tints[abs(name.hashValue) % Self.tints.count]
-        Text(Fmt.initials(name))
-            .font(.system(size: size * 0.4, weight: .semibold, design: .rounded))
-            .foregroundStyle(.white)
-            .frame(width: size, height: size)
-            .background(Circle().fill(tint.gradient))
-            .accessibilityHidden(true)
+        let initials = Fmt.initials(name)
+        ZStack {
+            Circle().fill(Self.gradient)
+            if initials == "#" || !name.contains(where: \.isLetter) {
+                Image(systemName: "person.fill")
+                    .font(.system(size: size * 0.62))
+                    .foregroundStyle(.white.opacity(0.95))
+                    .offset(y: size * 0.12)
+                    .clipShape(Circle())
+            } else {
+                Text(verbatim: initials)
+                    .font(.system(size: size * 0.42, weight: .medium, design: .rounded))
+                    .foregroundStyle(.white)
+            }
+        }
+        .frame(width: size, height: size)
+        .clipShape(Circle())
+        .accessibilityHidden(true)
+    }
+}
+
+// MARK: - Liquid Glass (iOS 26 and later), with the closest look on iOS 18
+
+extension View {
+    /// A round glass button background, like the call buttons in the Phone app.
+    @ViewBuilder func glassCircle(tint: Color? = nil) -> some View {
+        if #available(iOS 26.0, *) {
+            glassEffect(Glass.regular.tint(tint).interactive(), in: Circle())
+        } else {
+            background(Circle().fill(tint ?? Color(.secondarySystemFill)))
+        }
+    }
+
+    /// A glass capsule or rounded panel.
+    @ViewBuilder func glassPanel(cornerRadius: CGFloat? = nil, interactive: Bool = false) -> some View {
+        if #available(iOS 26.0, *) {
+            if let r = cornerRadius {
+                glassEffect(Glass.regular.interactive(interactive), in: RoundedRectangle(cornerRadius: r, style: .continuous))
+            } else {
+                glassEffect(Glass.regular.interactive(interactive), in: Capsule())
+            }
+        } else {
+            if let r = cornerRadius {
+                background(.regularMaterial, in: RoundedRectangle(cornerRadius: r, style: .continuous))
+            } else {
+                background(.regularMaterial, in: Capsule())
+            }
+        }
+    }
+
+    /// The main action of a screen.
+    @ViewBuilder func prominentButton() -> some View {
+        if #available(iOS 26.0, *) { buttonStyle(.glassProminent) } else { buttonStyle(.borderedProminent) }
+    }
+
+    /// A secondary action of a screen.
+    @ViewBuilder func secondaryButton() -> some View {
+        if #available(iOS 26.0, *) { buttonStyle(.glass) } else { buttonStyle(.bordered) }
+    }
+}
+
+/// Toolbar button that opens the gateway status and settings. Its dot shows the link at a glance.
+struct GatewayButton: View {
+    @Environment(AppModel.self) private var model
+    var body: some View {
+        Button { model.showGateway = true } label: {
+            Image(systemName: "iphone.gen3.radiowaves.left.and.right")
+                .overlay(alignment: .topTrailing) {
+                    Circle().fill(dot).frame(width: 7, height: 7).offset(x: 3, y: -2)
+                }
+        }
+        .accessibilityLabel(L("gateway.open"))
+    }
+    private var dot: Color {
+        if model.demo { return .orange }
+        switch model.link {
+        case .connected: return .green
+        case .bluetoothOff, .bluetoothDenied: return .red
+        default: return .orange
+        }
     }
 }
 
@@ -94,23 +169,28 @@ struct SimMenu: View {
                 }
             } label: {
                 Label(s.sims.first { $0.subId == subId }?.displayLabel ?? L("sim.choose"), systemImage: "simcard")
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.medium))
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .glassPanel(interactive: true)
             }
             .accessibilityLabel(L("sim.choose"))
         }
     }
 }
 
-/// Banner for anything other than a healthy connection.
+/// Small glass notice under the title for anything other than a healthy connection.
 struct LinkBanner: View {
     @Environment(AppModel.self) private var model
     var body: some View {
         if let text = text {
             Label(text, systemImage: icon)
                 .font(.footnote.weight(.medium))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.leading)
                 .padding(.horizontal, 14).padding(.vertical, 8)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.thinMaterial)
+                .glassPanel(cornerRadius: 18)
+                .padding(.horizontal, 16).padding(.bottom, 6)
+                .frame(maxWidth: .infinity)
                 .accessibilityAddTraits(.isStaticText)
         }
     }

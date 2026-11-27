@@ -36,6 +36,9 @@
 "calls.empty.body" = "Calls made and received on your gateway phone appear here.";
 "calls.empty.title" = "No Recent Calls";
 "calls.favourites" = "Favorites";
+"calls.filter" = "Filter";
+"calls.filter.all" = "All Calls";
+"calls.filter.missed" = "Missed";
 "calls.off.body" = "Turn on “Recent calls” in the gateway app to see them here. You can still call from the keypad.";
 "calls.off.title" = "Recent Calls Are Off";
 "calls.recents" = "Recents";
@@ -80,6 +83,7 @@
 "gateway.default" = "Default";
 "gateway.features" = "What Your Gateway Offers";
 "gateway.noSimInfo" = "SIM details aren't shared. Allow “Calls” or “Carrier codes” on the gateway.";
+"gateway.open" = "Gateway and Settings";
 "gateway.roaming" = "Roaming";
 "gateway.title" = "Gateway Phone";
 "gateway.unsupported" = "Hold, swap and keypad tones need “Full call control” on the gateway. Not available: APN, VoLTE, preferred network, SIM PIN and hotspot controls. These need system access the gateway app doesn't have. Mute, speaker and keypad tones work during calls carried to this iPhone.";
@@ -158,8 +162,11 @@
 "privacy.unpair" = "Unpair";
 "privacy.unpairBody" = "This iPhone forgets the gateway, and the gateway removes this iPhone if it's connected now.";
 "privacy.unpairTitle" = "Unpair from gateway?";
+"search.all" = "Search";
 "search.calls" = "Search";
 "search.contacts" = "Search Contacts";
+"search.empty.body" = "Contacts, recent calls and messages from your gateway.";
+"search.empty.title" = "Search Pol";
 "search.messages" = "Search Messages";
 "setup.1" = "An Android phone (Android 8 or later) with your SIM card(s) and Pol Gateway installed.";
 "setup.2" = "On that phone: turn the gateway on, allow the features you want, then tap “Pair a new device”.";
@@ -185,6 +192,7 @@
 "tab.gateway" = "Gateway";
 "tab.keypad" = "Keypad";
 "tab.messages" = "Messages";
+"tab.search" = "Search";
 "thread.cannotReply" = "Replies aren't available for this sender";
 "thread.delivered" = "Delivered";
 "thread.notSent" = "Not Sent";
@@ -193,6 +201,8 @@
 "thread.send" = "Send";
 "thread.sending" = "Sending…";
 "thread.sent" = "Sent";
+"thread.smsPlaceholder" = "Text Message · SMS";
+"thread.today" = "Today";
 "time.yesterday" = "Yesterday";
 "unknownNumber" = "Unknown";
 "welcome.body" = "Use the SIM cards in your Android gateway phone from this iPhone: calls, texts, recent calls and contacts, over an encrypted Bluetooth link.";

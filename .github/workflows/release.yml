@@ -46,11 +46,12 @@ jobs:
         with: { name: android, path: out/ }
 
   ios:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
       - name: Build unsigned IPA
         run: |
+          tools/select-xcode.sh
           brew install xcodegen
           cd ios && xcodegen
           xcodebuild -scheme Pol -configuration Release -sdk iphoneos -destination "generic/platform=iOS" -archivePath "$RUNNER_TEMP/Pol.xcarchive" archive \

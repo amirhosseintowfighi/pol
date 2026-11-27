@@ -2,6 +2,7 @@ import SwiftUI
 
 struct GatewayView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
     @State private var confirmUnpair = false
     @State private var confirmErase = false
 
@@ -67,7 +68,7 @@ struct GatewayView: View {
                     Label(L("privacy.body"), systemImage: "lock.shield").font(.callout)
                     if let g = model.gateway {
                         LabeledContent(L("privacy.pairedWith"), value: g.name)
-                        LabeledContent(L("privacy.fingerprint"), value: ltr(g.fingerprintText)).font(.callout.monospaced())
+                        LabeledContent(L("privacy.fingerprint")) { Text(verbatim: ltr(g.fingerprintText)).font(.callout.monospaced()) }
                         Button(L("privacy.unpair"), role: .destructive) { confirmUnpair = true }
                     }
                     Button(L("privacy.erase"), role: .destructive) { confirmErase = true }
@@ -81,10 +82,16 @@ struct GatewayView: View {
                         Link(L("about.studio"), destination: URL(string: "https://virgule.studio")!)
                     }
                     Link("virgule.studio", destination: URL(string: "https://virgule.studio")!)
-                    Link(L("about.source"), destination: URL(string: "https://github.com/amirhosseintowfighi/tel-bridge")!)
+                    Link(L("about.source"), destination: URL(string: "https://github.com/amirhosseintowfighi/pol")!)
                 } header: { Text(L("about.title")) } footer: { Text(L("about.license")) }
             }
             .navigationTitle(L("tab.gateway"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button { dismiss() } label: { Image(systemName: "checkmark") }.accessibilityLabel(L("done"))
+                }
+            }
             .confirmationDialog(L("privacy.unpairTitle"), isPresented: $confirmUnpair, titleVisibility: .visible) {
                 Button(L("privacy.unpair"), role: .destructive) { model.forgetGateway() }
             } message: { Text(L("privacy.unpairBody")) }
@@ -168,22 +175,22 @@ struct OnboardingView: View {
                         Text(L("pair.compareTitle")).font(.title2.weight(.semibold)).multilineTextAlignment(.center)
                         Text(L("pair.compareBody %@", name)).multilineTextAlignment(.center)
                         SasCodeView(sas: sas).padding(.vertical)
-                        Text(L("pair.fingerprint %@", ltr(fp))).font(.footnote.monospaced()).foregroundStyle(.secondary)
+                        Text(L("pair.fingerprint %@", ltr(fp))).font(.footnote).monospacedDigit().foregroundStyle(.secondary)
                         if waiting {
                             ProgressView(); Text(L("pair.waiting")).multilineTextAlignment(.center)
                         } else {
-                            Button { model.confirmSas() } label: { Text(L("pair.match")).frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).controlSize(.large)
-                            Button(role: .destructive) { model.declineSas() } label: { Text(L("pair.differ")).frame(maxWidth: .infinity) }.buttonStyle(.bordered).controlSize(.large)
+                            Button { model.confirmSas() } label: { Text(L("pair.match")).frame(maxWidth: .infinity) }.prominentButton().controlSize(.large)
+                            Button(role: .destructive) { model.declineSas() } label: { Text(L("pair.differ")).frame(maxWidth: .infinity) }.secondaryButton().controlSize(.large)
                         }
                     case .done(let name):
                         Image(systemName: "checkmark.circle.fill").font(.system(size: 56)).foregroundStyle(.green)
                         Text(L("pair.done %@", name)).font(.title2.weight(.semibold)).multilineTextAlignment(.center)
-                        Button { model.cancelPairing() } label: { Text(L("continue")).frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).controlSize(.large)
+                        Button { model.cancelPairing() } label: { Text(L("continue")).frame(maxWidth: .infinity) }.prominentButton().controlSize(.large)
                     case .failed(let reason):
                         Image(systemName: "exclamationmark.triangle").font(.system(size: 44)).foregroundStyle(.orange)
                         Text(L("pair.failed")).font(.title2.weight(.semibold))
                         Text(failure(reason)).multilineTextAlignment(.center)
-                        Button { model.startPairing() } label: { Text(L("pair.tryAgain")).frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).controlSize(.large)
+                        Button { model.startPairing() } label: { Text(L("pair.tryAgain")).frame(maxWidth: .infinity) }.prominentButton().controlSize(.large)
                         Button(L("cancel")) { model.cancelPairing() }
                     }
                 }
@@ -214,10 +221,10 @@ struct OnboardingView: View {
                 }
             }
             .padding(20).frame(maxWidth: .infinity, alignment: .leading)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 24))
+            .glassPanel(cornerRadius: 26)
             if model.link == .bluetoothDenied { Text(L("pair.btDenied")).foregroundStyle(.red).multilineTextAlignment(.center) }
-            Button { model.startPairing() } label: { Text(L("pair.start")).frame(maxWidth: .infinity) }.buttonStyle(.borderedProminent).controlSize(.large)
-            Button { model.enterDemo() } label: { Text(L("demo.try")).frame(maxWidth: .infinity) }.buttonStyle(.bordered).controlSize(.large)
+            Button { model.startPairing() } label: { Text(L("pair.start")).frame(maxWidth: .infinity) }.prominentButton().controlSize(.large)
+            Button { model.enterDemo() } label: { Text(L("demo.try")).frame(maxWidth: .infinity) }.secondaryButton().controlSize(.large)
             Text(L("privacy.short")).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
     }

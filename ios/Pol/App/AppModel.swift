@@ -69,6 +69,8 @@ final class AppModel {
     @ObservationIgnored private(set) var callKit: CallCoordinator!
     /// Debug screenshots only: which tab and conversation to open on launch.
     var screenshotTab: Int?
+    /// Gateway status and settings, opened from the toolbar of each tab.
+    var showGateway = false
     var screenshotThread: ThreadRoute?
 
     init() {
@@ -618,7 +620,8 @@ extension AppModel {
         case "keypad": screenshotTab = 2
         case "messages": screenshotTab = 3
         case "thread": screenshotTab = 3; screenshotThread = ThreadRoute(thread: 1, address: "+15555550101")
-        case "gateway": screenshotTab = 4
+        case "gateway": screenshotTab = 0; showGateway = true
+        case "search": screenshotTab = 4
         case "incall": screenshotTab = 0; DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in MainActor.assumeIsolated { self?.simulateIncomingCall() } }
         default: screenshotTab = 0
         }

@@ -115,7 +115,7 @@ fun SasCodeView(sas: String) {
 /** Studio and project links, shown in the app's About section. Opening them is the user's choice, in their browser. */
 object About {
     const val STUDIO_URL = "https://virgule.studio"
-    const val SOURCE_URL = "https://github.com/amirhosseintowfighi/tel-bridge"
+    const val SOURCE_URL = "https://github.com/amirhosseintowfighi/pol"
 }
 
 /**

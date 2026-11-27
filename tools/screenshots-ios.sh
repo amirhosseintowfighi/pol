@@ -4,11 +4,7 @@
 set -euo pipefail
 APP="$1"; OUT="$2"; mkdir -p "$OUT"
 BUNDLE=studio.virgule.pol.ios
-UDID=$(xcrun simctl list devices available -j | python3 -c '
-import json,sys
-d=json.load(sys.stdin)["devices"]
-c=[x for r,v in d.items() if "iOS" in r for x in v if x["name"].startswith("iPhone 16")]
-print(sorted(c, key=lambda x: x["name"])[0]["udid"])')
+UDID=$("$(dirname "$0")/ios-sim.sh")
 xcrun simctl boot "$UDID" || true
 xcrun simctl bootstatus "$UDID" -b
 xcrun simctl status_bar "$UDID" override --time 9:41 --dataNetwork wifi --wifiBars 3 --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
@@ -21,6 +17,6 @@ shoot() { # lang locale appearance screen
   xcrun simctl io "$UDID" screenshot "$OUT/ios-$1-$3-$4.png" >/dev/null
   echo "captured ios-$1-$3-$4"
 }
-for s in pair calls contacts keypad messages thread incall gateway; do shoot fa fa_IR light "$s"; done
+for s in pair calls contacts keypad messages thread incall gateway search; do shoot fa fa_IR light "$s"; done
 for s in pair calls messages thread incall gateway; do shoot en en_US light "$s"; done
 for s in calls thread incall; do shoot fa fa_IR dark "$s"; done

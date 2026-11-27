@@ -39,11 +39,13 @@ jobs:
           ! grep -R "android.permission.INTERNET" android/app/build/intermediates/merged_manifests/ || (echo "INTERNET permission found" && exit 1)
 
   ios:
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
       - name: Generate project and run tests
         run: |
+          tools/select-xcode.sh
           brew install xcodegen
+          sim=$(tools/ios-sim.sh)
           cd ios && xcodegen
-          xcodebuild -scheme Pol -destination 'platform=iOS Simulator,name=iPhone 16' test CODE_SIGNING_ALLOWED=NO
+          xcodebuild -scheme Pol -destination "id=$sim" test CODE_SIGNING_ALLOWED=NO
