@@ -96,26 +96,13 @@ struct ThreadView: View {
     var body: some View {
         let items = model.thread(threadId, address: address)
         let canSend = model.caps?.smsSend != false && Validate.smsRecipient(address) != nil
-        let lastOut = items.last { $0.dir == .outgoing }?.key
+        let lastOut: String? = items.last(where: { $0.dir == .outgoing })?.key
         let name = model.name(for: address)
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 3) {
-                    ForEach(Array(items.enumerated()), id: \.element.key) { i, m in
-                        let newGroup = i == 0 || m.date.timeIntervalSince(items[i - 1].date) > 3600
-                        let next: Sms? = i + 1 < items.count ? items[i + 1] : nil
-                        let tail = next == nil || next!.dir != m.dir || next!.date.timeIntervalSince(m.date) > 3600
-                        if newGroup {
-                            VStack(spacing: 1) {
-                                if i == 0 { Text(L("thread.smsPlaceholder")) }
-                                Text(verbatim: header(m))
-                            }
-                            .font(.caption2.weight(.medium)).foregroundStyle(.secondary)
-                            .padding(.top, i == 0 ? 4 : 14).padding(.bottom, 6)
-                        }
-                        Bubble(m: m, tail: tail, showStatus: m.key == lastOut || m.state == .failed)
-                            .padding(.bottom, tail ? 6 : 0)
-                            .id(m.key)
+                    ForEach(Array(items.enumerated()), id: \.element.key) { i, _ in
+                        threadRow(items, i, lastOut: lastOut)
                     }
                 }
                 .padding(.horizontal, 16).padding(.vertical, 8)
@@ -161,12 +148,44 @@ struct ThreadView: View {
         .alert(alert ?? "", isPresented: .init(get: { alert != nil }, set: { if !$0 { alert = nil } })) { Button(L("ok")) {} }
     }
 
+    /// One message, with the date header above it when a new group starts and the tail on the last of a run.
+    @ViewBuilder private func threadRow(_ items: [Sms], _ i: Int, lastOut: String?) -> some View {
+        let m: Sms = items[i]
+        let newGroup: Bool = i == 0 || m.date.timeIntervalSince(items[i - 1].date) > 3600
+        let tail: Bool = isLastOfRun(items, i)
+        let status: Bool = m.key == lastOut || m.state == .failed
+        if newGroup {
+            VStack(spacing: 1) {
+                if i == 0 { Text(L("thread.smsPlaceholder")) }
+                Text(verbatim: header(m))
+            }
+            .font(.caption2.weight(.medium)).foregroundStyle(.secondary)
+            .padding(.top, i == 0 ? 4 : 14).padding(.bottom, 6)
+        }
+        Bubble(m: m, tail: tail, showStatus: status)
+            .padding(.bottom, tail ? 6 : 0)
+            .id(m.key)
+    }
+
+    private func isLastOfRun(_ items: [Sms], _ i: Int) -> Bool {
+        guard i + 1 < items.count else { return true }
+        let next = items[i + 1]
+        if next.dir != items[i].dir { return true }
+        return next.date.timeIntervalSince(items[i].date) > 3600
+    }
+
     /// "Today 12:15 · Personal", as Messages shows above a group of texts.
     private func header(_ m: Sms) -> String {
         let cal = Calendar.current
         let day = cal.isDateInToday(m.date) ? L("thread.today") : (cal.isDateInYesterday(m.date) ? L("time.yesterday") : m.date.formatted(.dateTime.weekday(.abbreviated).day().month()))
         return [day + " " + m.date.formatted(date: .omitted, time: .shortened), model.simLabel(m.subId)].compactMap { $0 }.joined(separator: " · ")
     }
+}
+
+private func placeholder(enabled: Bool, line: String?) -> String {
+    if !enabled { return L("thread.cannotReply") }
+    if let line { return line + " · SMS" }
+    return L("thread.smsPlaceholder")
 }
 
 /// The Messages compose bar: a round + button (the SIM to send from) and a glass text field with the send button.
@@ -196,8 +215,7 @@ struct SmsComposer: View {
                 .disabled(!several)
                 .accessibilityLabel(L("sim.choose"))
                 HStack(alignment: .bottom, spacing: 4) {
-                    TextField(enabled ? (several && line != nil ? line! + " · SMS" : L("thread.smsPlaceholder")) : L("thread.cannotReply"),
-                              text: $text, axis: .vertical)
+                    TextField(placeholder(enabled: enabled, line: several ? line : nil), text: $text, axis: .vertical)
                         .lineLimit(1...5)
                         .padding(.leading, 16).padding(.vertical, 10)
                         .disabled(!enabled)
@@ -304,11 +322,23 @@ private struct NewMessageSheet: View {
     @State private var alert: String?
     @FocusState private var toFocused: Bool
 
+    private func suggestions() -> [Contact] {
+        let q = to.trimmingCharacters(in: .whitespaces)
+        if q.isEmpty { return [] }
+        let digits = q.filter(\.isNumber)
+        var out: [Contact] = []
+        for c in model.contacts {
+            let byName = c.name.localizedCaseInsensitiveContains(q)
+            let byNumber = !digits.isEmpty && c.phones.contains { $0.number.contains(digits) }
+            if byName || byNumber { out.append(c) }
+            if out.count == 12 { break }
+        }
+        return out
+    }
+
     var body: some View {
         let recipient = Validate.smsRecipient(to)
-        let matches = to.count >= 1 ? Array(model.contacts.filter { c in
-            c.name.localizedCaseInsensitiveContains(to) || c.phones.contains { $0.number.contains(to.filter(\.isNumber)) && !to.filter(\.isNumber).isEmpty }
-        }.prefix(12)) : []
+        let matches: [Contact] = suggestions()
         NavigationStack {
             VStack(spacing: 0) {
                 HStack(spacing: 6) {
