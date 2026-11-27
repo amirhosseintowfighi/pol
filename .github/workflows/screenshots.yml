@@ -50,3 +50,24 @@ jobs:
           script: tools/screenshots-android.sh out
       - uses: actions/upload-artifact@v4
         with: { name: Pol-screenshots-Android, path: out/ }
+
+  # Saves the screenshots in the repository (docs/screenshots) so the README and docs can show them.
+  # Pushes made with GITHUB_TOKEN don't start new workflow runs, so this can't loop.
+  publish:
+    needs: [ios, android]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { pattern: Pol-screenshots-*, path: docs/screenshots, merge-multiple: true }
+      - name: Commit screenshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots
+          git diff --cached --quiet && { echo "No changes"; exit 0; }
+          git commit -m "Update app screenshots"
+          git push
