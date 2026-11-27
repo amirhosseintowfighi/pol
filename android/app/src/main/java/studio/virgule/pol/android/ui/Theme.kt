@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val Brand = Color(0xFF1F6F5C)
+private val Brand = Color(0xFF3A4CC0)
 
 /** Material 3 with the wallpaper-based dynamic colour Android users expect; a calm teal fallback before Android 12. */
 @Composable

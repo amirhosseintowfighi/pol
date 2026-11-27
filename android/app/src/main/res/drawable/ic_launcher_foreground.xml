@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pol mark: two virgules (commas) whose tails meet in an arch, a bridge between two phones. Source: docs/brand. -->
+<!-- Pol: two Virgule commas whose tails meet in an arch (a bridge, pol), with Virgule's red square. Source: docs/brand. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <group android:scaleX="0.62" android:scaleY="0.62" android:translateX="23.0" android:translateY="21.295">
-        <path android:fillColor="#FFFFFF" android:pathData="M14 70 C14 43 29 27.5 47.6 25.5 C38 31 33.2 46 34 70 A10 10 0 0 1 14 70 Z M86 70 C86 43 71 27.5 52.4 25.5 C62 31 66.8 46 66 70 A10 10 0 0 0 86 70 Z" />
+    <group android:scaleX="0.5" android:scaleY="0.5" android:translateX="29.0" android:translateY="28.0">
+        <path android:fillColor="#FFFFFF" android:pathData="M11 70 A13 13 0 1 1 37 70 A13 13 0 1 1 11 70 Z M11 70 C11 45 27 27 48.8 21 C36.5 30 28.5 42 28 57.8 Z M63 70 A13 13 0 1 0 89 70 A13 13 0 1 0 63 70 Z M89 70 C89 45 73 27 51.2 21 C63.5 30 71.5 42 72 57.8 Z" />
+        <path android:fillColor="#E0522F" android:pathData="M45.5,74h9v9h-9z" />
     </group>
 </vector>
