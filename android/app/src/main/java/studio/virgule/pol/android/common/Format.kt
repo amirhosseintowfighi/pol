@@ -15,9 +15,13 @@ object Format {
     /** Wraps text that must stay left-to-right (phone numbers, codes) when shown inside right-to-left UI. */
     fun ltr(s: String) = LRI + s + PDI
 
-    // Unicode isolates (U+2066 left-to-right isolate, U+2069 pop directional isolate), built from code points
+    /** Wraps user text (a message body) so it takes the direction of its own first strong letter. */
+    fun auto(s: String) = FSI + s + PDI
+
+    // Unicode isolates (U+2066 left-to-right isolate, U+2068 first-strong isolate, U+2069 pop directional isolate), built from code points
     // so no invisible control characters sit in the source.
     private val LRI = Char(0x2066).toString()
+    private val FSI = Char(0x2068).toString()
     private val PDI = Char(0x2069).toString()
 
     fun number(n: Long): String = NumberFormat.getInstance(ulocale()).format(n)

@@ -40,6 +40,7 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -56,6 +57,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -101,7 +103,7 @@ fun MessagesScreen(repo: ClientRepository, snap: ClientSnapshot, openThread: (Lo
                             leadingContent = { Avatar(name ?: "#") },
                             headlineContent = { Text(name ?: Format.ltr(c.address), fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal, maxLines = 1) },
                             supportingContent = {
-                                Text((if (c.last.dir == Direction.OUT) stringResource(R.string.you_prefix) else "") + c.last.body, maxLines = 2,
+                                Text((if (c.last.dir == Direction.OUT) stringResource(R.string.you_prefix) else "") + Format.auto(c.last.body), maxLines = 2,
                                     fontWeight = if (bold) FontWeight.SemiBold else FontWeight.Normal)
                             },
                             trailingContent = { Text(Format.relative(c.last.ts), style = MaterialTheme.typography.labelSmall) },
@@ -184,7 +186,7 @@ fun ThreadScreen(repo: ClientRepository, snap: ClientSnapshot, thread: Long, add
                                 modifier = Modifier.widthIn(max = 300.dp).clickable(onClickLabel = stringResource(R.string.copy)) {
                                     clipboard.setText(AnnotatedString(m.body))
                                 },
-                            ) { Text(m.body, Modifier.padding(horizontal = 14.dp, vertical = 9.dp)) }
+                            ) { Text(m.body, Modifier.padding(horizontal = 14.dp, vertical = 9.dp), style = LocalTextStyle.current.copy(textDirection = TextDirection.Content)) }
                             val status = when (m.state) {
                                 DeliveryState.PENDING -> stringResource(R.string.sending)
                                 DeliveryState.SENT -> stringResource(R.string.sent)

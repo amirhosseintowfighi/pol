@@ -106,11 +106,10 @@ fun Pill(text: String, modifier: Modifier = Modifier, strong: Boolean = false) {
 @Composable
 fun SasCodeView(sas: String) {
     val spoken = sas.toCharArray().joinToString(" ")
-    Row(Modifier.fillMaxWidth().semantics { contentDescription = spoken }, horizontalArrangement = Arrangement.Center) {
-        Text(Format.ltr(Format.digits(sas.take(3))), fontSize = 40.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.width(16.dp))
-        Text(Format.ltr(Format.digits(sas.drop(3))), fontSize = 40.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold)
-    }
+    // One isolated left-to-right run, so a right-to-left layout can't swap the two groups.
+    Text(Format.ltr(Format.digits(sas.take(3)) + "\u2002" + Format.digits(sas.drop(3))),
+        Modifier.fillMaxWidth().semantics { contentDescription = spoken }, textAlign = TextAlign.Center,
+        fontSize = 40.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold)
 }
 
 /** Studio and project links, shown in the app's About section. Opening them is the user's choice, in their browser. */
