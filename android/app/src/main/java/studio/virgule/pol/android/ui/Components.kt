@@ -20,6 +20,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.Icons
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,15 +43,60 @@ import studio.virgule.pol.android.R
 import androidx.compose.ui.unit.sp
 import studio.virgule.pol.android.common.Format
 
-/** Tonal initials avatar; colour chosen from the name so a person keeps the same colour everywhere. */
+/** Contact picture as in Google's Phone and Messages: a coloured circle with the initial, or a person silhouette for
+ *  numbers without a name. The colour comes from the name, so a person keeps the same colour everywhere. */
 @Composable
 fun Avatar(name: String, modifier: Modifier = Modifier, size: Int = 44) {
-    val c = MaterialTheme.colorScheme
-    val palette = listOf(c.primaryContainer to c.onPrimaryContainer, c.secondaryContainer to c.onSecondaryContainer,
-        c.tertiaryContainer to c.onTertiaryContainer)
-    val (bg, fg) = palette[(name.hashCode() and 0x7fffffff) % palette.size]
+    val (bg, fg) = avatarColors(name)
+    val letter = name.firstOrNull { it.isLetter() }
     Box(modifier.size(size.dp).clip(CircleShape).background(bg), contentAlignment = Alignment.Center) {
-        Text(Format.initials(name), color = fg, style = MaterialTheme.typography.titleMedium)
+        if (letter == null) {
+            Icon(Icons.Filled.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size((size * 0.62f).dp))
+        } else {
+            Text(letter.uppercase(), color = fg, fontSize = (size * 0.42f).sp)
+        }
+    }
+}
+
+private val avatarPalette = listOf(
+    Color(0xFFF6AED2) to Color(0xFF5C1340), // pink
+    Color(0xFF8FDCA0) to Color(0xFF0D4A1E), // green
+    Color(0xFF7CD6F2) to Color(0xFF00405A), // blue
+    Color(0xFFFFCB52) to Color(0xFF4F3500), // yellow
+    Color(0xFFFFA866) to Color(0xFF5A2600), // orange
+    Color(0xFFC6A6FA) to Color(0xFF34156B), // purple
+    Color(0xFFF28B82) to Color(0xFF5F1410), // red
+)
+
+fun avatarColors(name: String): Pair<Color, Color> = avatarPalette[(name.hashCode() and 0x7fffffff) % avatarPalette.size]
+
+/** Shape of one row in a group of rounded cards, the list style of current Google apps: large outer corners on the
+ *  first and last card, small inner corners in between. */
+fun segmentShape(index: Int, count: Int): RoundedCornerShape {
+    val big = 20.dp; val small = 4.dp
+    return RoundedCornerShape(
+        topStart = if (index == 0) big else small, topEnd = if (index == 0) big else small,
+        bottomStart = if (index == count - 1) big else small, bottomEnd = if (index == count - 1) big else small,
+    )
+}
+
+/** One card of such a group. */
+@Composable
+fun SegmentCard(index: Int, count: Int, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null, content: @Composable () -> Unit) {
+    val shape = segmentShape(index, count)
+    val color = MaterialTheme.colorScheme.surfaceBright
+    val m = modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 3.dp)
+    if (onClick != null) Surface(onClick = onClick, modifier = m, shape = shape, color = color) { content() }
+    else Surface(m, shape = shape, color = color) { content() }
+}
+
+/** Small numbered SIM badge, coloured per slot like the system SIM picker. */
+@Composable
+fun SimBadge(slot: Int, modifier: Modifier = Modifier) {
+    val color = if (slot % 2 == 0) Color(0xFFC2185B) else Color(0xFF00796B)
+    Box(modifier.size(width = 18.dp, height = 22.dp).clip(RoundedCornerShape(topStart = 2.dp, topEnd = 7.dp, bottomStart = 2.dp, bottomEnd = 2.dp))
+        .background(color), contentAlignment = Alignment.Center) {
+        Text((slot + 1).toString(), color = Color.White, style = MaterialTheme.typography.labelMedium)
     }
 }
 

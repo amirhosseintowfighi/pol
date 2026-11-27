@@ -295,13 +295,14 @@ struct KeypadView: View {
 
 // MARK: - In call
 
-/// Ringing or active call on the gateway, in the style of the iPhone call screen. When the call is bridged to this
-/// iPhone, CallKit's own screen is shown instead; this view is for calls whose voice stays on the gateway.
+/// Ringing or active call on the gateway, laid out like the iPhone call screen. When the call is bridged to this
+/// iPhone, CallKit shows the system screen on the lock screen; this view is the in-app one.
 struct InCallView: View {
     @Environment(AppModel.self) private var model
     @State private var muted = false
     @State private var speaker = false
     @State private var keypad = false
+    @State private var tones = ""
 
     var body: some View {
         if let call = model.liveCalls.first(where: { $0.state == .ringing }) ?? model.liveCalls.first {
@@ -309,47 +310,77 @@ struct InCallView: View {
             let control = model.caps?.callControl == true
             let bridged = model.callKit.isBridged(call.callId)
             ZStack {
-                LinearGradient(colors: [Color(red: 0.20, green: 0.24, blue: 0.33), Color(red: 0.07, green: 0.08, blue: 0.11)],
+                LinearGradient(colors: [Color(red: 0.43, green: 0.37, blue: 0.33), Color(red: 0.27, green: 0.26, blue: 0.27),
+                                        Color(red: 0.30, green: 0.32, blue: 0.38)],
                                startPoint: .top, endPoint: .bottom)
                     .ignoresSafeArea()
-                VStack(spacing: 10) {
-                    if let sim = model.simLabel(call.subId) {
-                        Label(sim, systemImage: "simcard").font(.footnote.weight(.medium)).foregroundStyle(.white.opacity(0.75))
-                            .padding(.horizontal, 10).padding(.vertical, 4).glassPanel()
-                            .padding(.top, 24)
-                    }
+                VStack(spacing: 4) {
                     TimelineView(.periodic(from: .now, by: 1)) { ctx in
-                        Text(verbatim: stateText(call, now: ctx.date)).font(.title3).foregroundStyle(.white.opacity(0.7))
+                        Text(verbatim: keypad && !tones.isEmpty ? " " : topLine(call, now: ctx.date))
+                            .font(.title3.weight(.semibold)).foregroundStyle(.white.opacity(0.55))
                     }
-                    Text(verbatim: name ?? ltr(call.number.isEmpty ? L("unknownNumber") : call.number))
-                        .font(.system(size: 38, weight: .regular)).foregroundStyle(.white)
-                        .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.6).padding(.horizontal)
-                    if name != nil { Text(verbatim: ltr(call.number)).foregroundStyle(.white.opacity(0.7)) }
-                    if model.liveCalls.count > 1 { Text(L("incall.waiting")).foregroundStyle(.orange) }
-                    Avatar(name: name ?? "#", size: 120).padding(.top, 18)
-                    if !bridged {
-                        Label(L(model.status?.audio == "ready" ? "incall.audioOff" : "incall.audioNote"), systemImage: "speaker.wave.2")
-                            .font(.callout).foregroundStyle(.white.opacity(0.9)).multilineTextAlignment(.center)
-                            .padding(14).glassPanel(cornerRadius: 22).padding(.horizontal, 20).padding(.top, 12)
+                    .padding(.top, 36)
+                    Text(verbatim: keypad && !tones.isEmpty ? tones : (name ?? ltr(call.number.isEmpty ? L("unknownNumber") : call.number)))
+                        .font(.system(size: 34, weight: .bold)).foregroundStyle(.white)
+                        .multilineTextAlignment(.center).lineLimit(1).minimumScaleFactor(0.5).padding(.horizontal, 24)
+                    if !keypad {
+                        if name != nil { Text(verbatim: ltr(call.number)).font(.title3.weight(.semibold)).foregroundStyle(.white.opacity(0.55)) }
+                        else if call.state != .ringing, let sim = model.simLabel(call.subId) {
+                            Text(verbatim: sim).font(.title3.weight(.semibold)).foregroundStyle(.white.opacity(0.55))
+                        }
+                        if model.liveCalls.count > 1 { Text(L("incall.waiting")).foregroundStyle(.orange).padding(.top, 4) }
                     }
                     Spacer()
-                    if call.state != .ringing {
-                        controls(call, bridged: bridged)
+                    if !bridged && !keypad {
+                        Label(L(model.status?.audio == "ready" ? "incall.audioOff" : "incall.audioNote"), systemImage: "speaker.wave.2")
+                            .font(.footnote).foregroundStyle(.white.opacity(0.85)).multilineTextAlignment(.leading)
+                            .padding(14).glassPanel(cornerRadius: 22).padding(.horizontal, 24).padding(.bottom, 18)
                     }
                     if !control {
-                        Text(L("incall.noControl")).font(.footnote).foregroundStyle(.white.opacity(0.7)).multilineTextAlignment(.center).padding(.horizontal)
+                        Text(L("incall.noControl")).font(.footnote).foregroundStyle(.white.opacity(0.7)).multilineTextAlignment(.center)
+                            .padding(.horizontal).padding(.bottom, 12)
                     }
-                    HStack(spacing: 90) {
-                        if call.state == .ringing {
-                            RoundButton(symbol: "phone.down.fill", label: L("incall.decline"), color: .red, enabled: control) { _ = model.endCall(call.callId, ringing: true) }
-                            RoundButton(symbol: "phone.fill", label: L("incall.answer"), color: .green, enabled: control) { _ = model.answerCall(call.callId) }
-                        } else {
-                            RoundButton(symbol: "phone.down.fill", label: L("incall.end"), color: .red, enabled: control) { _ = model.endCall(call.callId, ringing: false) }
+                    if call.state == .ringing {
+                        HStack {
+                            CallButton(symbol: "phone.down.fill", label: L("incall.decline"), color: .red, enabled: control) { _ = model.endCall(call.callId, ringing: true) }
+                            Spacer()
+                            CallButton(symbol: "phone.fill", label: L("incall.answer"), color: .green, enabled: control) { _ = model.answerCall(call.callId) }
+                        }
+                        .padding(.horizontal, 44)
+                    } else if keypad {
+                        DtmfPad { d in
+                            tones.append(d)
+                            model.callKit.dtmf(call.callId, String(d))
+                        }
+                        ZStack {
+                            CallButton(symbol: "phone.down.fill", label: nil, color: .red, enabled: control) { _ = model.endCall(call.callId, ringing: false) }
+                            HStack {
+                                Spacer()
+                                Button(L("incall.hideKeypad")) { keypad = false }.foregroundStyle(.white).font(.body.weight(.medium))
+                            }
+                            .padding(.horizontal, 32)
+                        }
+                        .padding(.top, 22)
+                    } else {
+                        Grid(horizontalSpacing: 34, verticalSpacing: 22) {
+                            GridRow {
+                                ToggleCircle(symbol: "speaker.wave.3.fill", label: L("incall.speaker"), on: speaker, enabled: bridged) {
+                                    speaker.toggle(); model.callKit.setSpeaker(speaker)
+                                }
+                                holdButton(call, bridged: bridged)
+                                ToggleCircle(symbol: muted ? "mic.slash.fill" : "mic.slash", label: L("incall.mute"), on: muted, enabled: bridged) {
+                                    muted.toggle(); model.callKit.setMuted(call.callId, muted)
+                                }
+                            }
+                            GridRow {
+                                moreButton(call, bridged: bridged)
+                                CallButton(symbol: "phone.down.fill", label: L("incall.end"), color: .red, enabled: control) { _ = model.endCall(call.callId, ringing: false) }
+                                ToggleCircle(symbol: "circle.grid.3x3.fill", label: L("tab.keypad"), on: false, enabled: bridged) { tones = ""; keypad = true }
+                            }
                         }
                     }
-                    .padding(.top, 16)
-                    .padding(.bottom, model.demo ? 8 : 36)
-                    if model.demo { Text(L("demo.callNote")).font(.caption).foregroundStyle(.white.opacity(0.6)).padding(.bottom, 12) }
+                    if model.demo { Text(L("demo.callNote")).font(.caption).foregroundStyle(.white.opacity(0.55)).padding(.top, 14) }
+                    Spacer().frame(height: 28)
                 }
             }
             .environment(\.colorScheme, .dark)
@@ -357,46 +388,36 @@ struct InCallView: View {
         }
     }
 
-    @ViewBuilder private func controls(_ call: LiveCall, bridged: Bool) -> some View {
-        VStack(spacing: 22) {
-            if keypad && bridged {
-                DtmfPad { d in model.callKit.dtmf(call.callId, String(d)) }
-            } else {
-                HStack(spacing: 30) {
-                    if bridged {
-                        ToggleCircle(symbol: "speaker.wave.2.fill", label: L("incall.speaker"), on: speaker) {
-                            speaker.toggle(); model.callKit.setSpeaker(speaker)
-                        }
-                        ToggleCircle(symbol: muted ? "mic.slash.fill" : "mic.fill", label: L("incall.mute"), on: muted) {
-                            muted.toggle(); model.callKit.setMuted(call.callId, muted)
-                        }
-                    }
-                    if model.caps?.hold == true {
-                        let other = model.liveCalls.first { $0.callId != call.callId && $0.state != .ringing }
-                        if let other {
-                            // Two calls: swap puts the current one on hold and resumes the other.
-                            ToggleCircle(symbol: "arrow.left.arrow.right", label: L("incall.swap"), on: false) {
-                                if bridged { model.callKit.setHeld(other.callId, false) } else { model.callAction(other.callId, "unhold") }
-                            }
-                        } else {
-                            let held = call.state == .holding
-                            ToggleCircle(symbol: held ? "play.fill" : "pause.fill", label: L(held ? "incall.resume" : "incall.hold"), on: held) {
-                                if bridged { model.callKit.setHeld(call.callId, !held) } else { model.callAction(call.callId, held ? "unhold" : "hold") }
-                            }
-                        }
-                    }
-                }
-            }
-            if bridged {
-                ToggleCircle(symbol: "circle.grid.3x3.fill", label: L("tab.keypad"), on: keypad) { keypad.toggle() }
-            }
+    @ViewBuilder private func holdButton(_ call: LiveCall, bridged: Bool) -> some View {
+        let held = call.state == .holding
+        ToggleCircle(symbol: "pause.fill", label: L(held ? "incall.resume" : "incall.hold"), on: held, enabled: model.caps?.hold == true) {
+            if bridged { model.callKit.setHeld(call.callId, !held) } else { model.callAction(call.callId, held ? "unhold" : "hold") }
         }
     }
 
-    private func stateText(_ c: LiveCall, now: Date) -> String {
+    /// "More": swap between two calls when there is a second one.
+    @ViewBuilder private func moreButton(_ call: LiveCall, bridged: Bool) -> some View {
+        let other = model.liveCalls.first { $0.callId != call.callId && $0.state != .ringing }
+        VStack(spacing: 6) {
+            Menu {
+                Button {
+                    guard let other else { return }
+                    if bridged { model.callKit.setHeld(other.callId, false) } else { model.callAction(other.callId, "unhold") }
+                } label: { Label(L("incall.swap"), systemImage: "arrow.left.arrow.right") }
+                .disabled(other == nil || model.caps?.hold != true)
+            } label: {
+                Image(systemName: "ellipsis").font(.system(size: 26, weight: .semibold)).foregroundStyle(.white)
+                    .frame(width: 76, height: 76).glassCircle()
+            }
+            .accessibilityLabel(L("incall.more"))
+            Text(L("incall.more")).font(.footnote.weight(.medium)).foregroundStyle(.white)
+        }
+    }
+
+    private func topLine(_ c: LiveCall, now: Date) -> String {
         switch c.state {
-        case .ringing: return L("incall.ringing")
-        case .dialing: return L("incall.dialing")
+        case .ringing: return model.simLabel(c.subId) ?? L("incall.ringing")
+        case .dialing: return L("incall.calling")
         case .holding: return L("incall.holding")
         default:
             guard let since = c.activeSince else { return L("incall.inProgress") }
@@ -405,22 +426,23 @@ struct InCallView: View {
     }
 }
 
-private struct RoundButton: View {
-    let symbol: String, label: String, color: Color, enabled: Bool, action: () -> Void
+private struct CallButton: View {
+    let symbol: String, label: String?, color: Color, enabled: Bool, action: () -> Void
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             Button(action: action) {
-                Image(systemName: symbol).font(.system(size: 32)).foregroundStyle(.white).frame(width: 80, height: 80).background(Circle().fill(color))
+                Image(systemName: symbol).font(.system(size: 30)).foregroundStyle(.white)
+                    .frame(width: 76, height: 76).background(Circle().fill(color))
             }
             .disabled(!enabled).opacity(enabled ? 1 : 0.4)
-            .accessibilityLabel(label)
-            Text(verbatim: label).font(.footnote.weight(.medium)).foregroundStyle(.white)
+            .accessibilityLabel(label ?? L("incall.end"))
+            if let label { Text(verbatim: label).font(.footnote.weight(.medium)).foregroundStyle(.white) }
         }
     }
 }
 
 private struct ToggleCircle: View {
-    let symbol: String, label: String, on: Bool, action: () -> Void
+    let symbol: String, label: String, on: Bool, enabled: Bool, action: () -> Void
     var body: some View {
         VStack(spacing: 6) {
             Button(action: action) {
@@ -429,9 +451,10 @@ private struct ToggleCircle: View {
                     .glassCircle(tint: on ? .white : nil)
             }
             .buttonStyle(.plain)
+            .disabled(!enabled).opacity(enabled ? 1 : 0.4)
             .accessibilityLabel(label)
             .accessibilityAddTraits(on ? .isSelected : [])
-            Text(verbatim: label).font(.caption.weight(.medium)).foregroundStyle(.white)
+            Text(verbatim: label).font(.footnote.weight(.medium)).foregroundStyle(.white).opacity(enabled ? 1 : 0.5)
         }
     }
 }
@@ -439,17 +462,23 @@ private struct ToggleCircle: View {
 /// Keypad for menus during a call; tones are generated into the call audio on this iPhone.
 private struct DtmfPad: View {
     let tap: (Character) -> Void
-    private let keys: [Character] = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"]
+    private let keys: [(Character, String)] = [("1", ""), ("2", "ABC"), ("3", "DEF"), ("4", "GHI"), ("5", "JKL"), ("6", "MNO"),
+                                               ("7", "PQRS"), ("8", "TUV"), ("9", "WXYZ"), ("*", ""), ("0", "+"), ("#", "")]
     var body: some View {
-        Grid(horizontalSpacing: 20, verticalSpacing: 12) {
+        Grid(horizontalSpacing: 34, verticalSpacing: 16) {
             ForEach(0..<4) { r in
                 GridRow {
                     ForEach(0..<3) { c in
                         let k = keys[r * 3 + c]
-                        Button { UIImpactFeedbackGenerator(style: .light).impactOccurred(); tap(k) } label: {
-                            Text(String(k)).font(.system(size: 30)).foregroundStyle(.white).frame(width: 68, height: 68).glassCircle()
+                        Button { UIImpactFeedbackGenerator(style: .light).impactOccurred(); tap(k.0) } label: {
+                            VStack(spacing: -2) {
+                                Text(String(k.0)).font(.system(size: 34))
+                                Text(verbatim: k.1.isEmpty ? " " : k.1).font(.system(size: 9, weight: .bold)).tracking(2).opacity(k.1.isEmpty ? 0 : 1)
+                            }
+                            .foregroundStyle(.white).frame(width: 76, height: 76).glassCircle()
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(String(k.0))
                     }
                 }
             }

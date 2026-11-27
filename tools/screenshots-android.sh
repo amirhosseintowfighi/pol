@@ -26,8 +26,8 @@ shoot() { # pkg activity lang mode screen name
 }
 CA=studio.virgule.pol.android.client.ClientActivity
 GA=studio.virgule.pol.android.gateway.GatewayActivity
-for s in pair calls contacts messages thread incall gateway; do shoot $CPKG $CA fa no "$s" "client-fa-light-$s"; done
-for s in calls messages thread gateway; do shoot $CPKG $CA en no "$s" "client-en-light-$s"; done
+for s in pair calls keypad contacts search messages thread newchat incall gateway; do shoot $CPKG $CA fa no "$s" "client-fa-light-$s"; done
+for s in calls keypad messages thread incall; do shoot $CPKG $CA en no "$s" "client-en-light-$s"; done
 for s in calls thread; do shoot $CPKG $CA fa yes "$s" "client-fa-dark-$s"; done
 shoot $GPKG $GA fa no main "gateway-fa-light-main"
 shoot $GPKG $GA fa no pair "gateway-fa-light-pair"
