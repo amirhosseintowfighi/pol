@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pol: two Virgule commas whose tails meet in an arch (a bridge, pol), with Virgule's red square. Source: docs/brand. -->
+<!-- Pol: a bridge (pol) with the sun setting through its arch over the water, in Virgule's geometric style. Source: docs/brand. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <group android:scaleX="0.5" android:scaleY="0.5" android:translateX="29.0" android:translateY="28.0">
-        <path android:fillColor="#FFFFFF" android:pathData="M11 70 A13 13 0 1 1 37 70 A13 13 0 1 1 11 70 Z M11 70 C11 45 27 27 48.8 21 C36.5 30 28.5 42 28 57.8 Z M63 70 A13 13 0 1 0 89 70 A13 13 0 1 0 63 70 Z M89 70 C89 45 73 27 51.2 21 C63.5 30 71.5 42 72 57.8 Z" />
-        <path android:fillColor="#E0522F" android:pathData="M45.5,74h9v9h-9z" />
+    <group android:scaleX="0.6" android:scaleY="0.6" android:translateX="24.0" android:translateY="23.52">
+        <path android:fillColor="#E8B13E" android:pathData="M39 64 A11 11 0 0 1 61 64 Z" />
+        <path android:fillColor="#3A4CC0" android:pathData="M8 64 L8 34 L92 34 L92 64 L69 64 L69 52 A19 19 0 0 0 31 52 L31 64 Z" />
+        <path android:fillColor="#3A4CC0" android:pathData="M14.8 69 H85.2 A0.8 0.8 0 0 1 85.2 70.6 H14.8 A0.8 0.8 0 0 1 14.8 69 Z M26.8 74.5 H73.2 A0.8 0.8 0 0 1 73.2 76.1 H26.8 A0.8 0.8 0 0 1 26.8 74.5 Z M38.8 80 H61.2 A0.8 0.8 0 0 1 61.2 81.6 H38.8 A0.8 0.8 0 0 1 38.8 80 Z" />
+        <path android:fillColor="#E0522F" android:pathData="M45.5 20 H54.5 V29 H45.5 Z" />
     </group>
 </vector>
